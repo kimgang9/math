@@ -1,0 +1,24 @@
+import numpy as np
+from scipy.linalg import lu_factor, lu_solve
+
+# Read matrix and vector from file
+with open("LU_in.txt") as f:
+    n = int(f.readline())  # number of equations
+    A = np.zeros((n, n))   # matrix
+    b = np.zeros((n,))     # vector
+    for i in range(n):
+        line = f.readline().split()
+        for j in range(n):
+            A[i][j] = float(line[j])
+        b[i] = float(line[n])
+
+# LU decomposition
+lu, piv = lu_factor(A)
+
+# Solve the system of equations
+x = lu_solve((lu, piv), b)
+
+# Write solution to file
+with open("LU_out.txt", "w") as f:
+    for i in range(n):
+        f.write(f"x{i+1} = {x[i]:.6f}\n")
