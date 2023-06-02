@@ -1,0 +1,62 @@
+from numpy import array, zeros
+from numpy.linalg import det
+
+
+def fileopen(data): # 파일에서 공백을 기준으로 문자 나누기
+    with open(data, 'r', encoding='UTF8') as file:
+        text = file.read()
+
+        splitdata = text.split()
+
+    return splitdata, len(splitdata)
+
+
+def count_character(data): # 총 공백의 수를 계산
+    count = 0
+
+    for i in data:
+        count += len(i)
+
+    return count
+
+
+data, count = fileopen("cramer_input.txt")
+def read_matrix(filename):
+    with open(filename, 'r') as f:
+        if count == 12: # 3x3 행렬을 사용할때는 공백이 12개 이다
+         n = 3 # 3x3행렬일때
+        else:
+            n = 2 # 공백이 12개가 아니면 2x2행렬 사용으로 가정
+        A = zeros((n, n))
+        b = zeros((n,))
+        for i in range(n):
+            line = f.readline().strip().split()
+            for j in range(n):
+                A[i][j] = float(line[j])
+            b[i] = float(line[-1])
+    return A, b
+
+# Cramer 공식을 이용하여 방정식의 해를 구하는 함수
+def cramer(A, b):
+    n = len(b)
+    detsub = zeros((n))
+    X = zeros((n))
+    detA = det(A)
+    for i in range(n):
+        Atemp = A.copy()
+        Atemp[:, i] = b
+        detsub[i] = det(Atemp)
+        X[i] = detsub[i] / detA
+    return X
+
+# 입력 파일에서 행렬과 벡터를 읽어옴
+A, b = read_matrix('cramer_input.txt')
+
+# Cramer 공식을 이용하여 방정식의 해를 구함
+X = cramer(A, b)
+
+# 결과를 출력 파일에 저장함
+with open('cramer_output.txt', 'w') as f:
+    for i in range(len(X)):
+        f.write('x{} = {}'.format(i+1, X[i]))
+        print('x{} = {}'.format(i+1, X[i]))
