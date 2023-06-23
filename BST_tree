@@ -1,0 +1,188 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+
+using namespace std;
+
+struct node {
+	int data;
+	node* left;
+	node* right;
+};
+
+struct bst {
+	node* root = nullptr;
+	node* find(int value) {
+		return find_impl(root, value);
+	}
+
+public:
+	node* find_impl(node* current, int value) {
+
+		//노드가 존재하지 않을경우
+		if (!current) {
+			cout << endl;
+			return NULL;
+		}
+		//value 값이 현재 노드에 있는 경우
+		if (current->data == value) {
+			cout << endl;
+			return current;
+		}
+
+		//value값이 현재 노드 왼쪽에 있는 경우
+		if (value < current->data) {
+			cout << "0";
+			return find_impl(current->left, value);
+		}
+
+		//value값이 현재 노드 오른쪽에 있는 경우
+		cout << "1";
+		return find_impl(current->right, value);
+	}
+public:
+	void insert(int value) {
+		if (!root) {//1. 루트 노드가 없을 경우
+			root = new node{ value, NULL, NULL };
+		}
+		else { insert_impl(root, value); }//2. 루트 노드가 있을 경우
+	}
+public:
+	void insert_impl(node* current, int value) {//1. 왼쪽 서브 트리에 원소를 삽입해야 할경우
+		if (value < current->data) {//(1)왼쪽 자식 노드가 존재하지 않을 경우
+			if (!current->left) {
+				current->left = new node{ value, NULL, NULL };
+			}
+			else { insert_impl(current->left, value); }//(2)왼쪽 자식 노드가 존재할 경우
+		}
+		else {
+			if (!current->right) {//2. 오른쪽 서브 트리에 원소를 삽입해야 할경우
+				current->right = new node{ value, NULL, NULL };//(1) 오른쪽 자식 노드가 존재하지 않을 경우
+			}
+			else { insert_impl(current->right, value); }//(2) 오른쪽 자식 노드가 존재할 경우
+		}
+	}
+public:
+	void inorder() {
+		inorder_impl(root);
+	}
+public:
+	void inorder_impl(node* start) {
+		if (!start) {
+			return;
+		}
+		inorder_impl(start->left);// 왼쪽 서브 트리 방문
+		cout << start->data << " ";// 현재 노드 출력
+		inorder_impl(start->right);// 오른쪽 서브 트리 방문
+	}
+public:
+	node* successor(node* start) {
+		auto current = start->right;//오른쪽 서브 트리로 이동
+		while (current && current->left) {//왼쪽 하위 노드가 존재할 때까지 계속 반복
+			current = current->left;//왼쪽의 하위 노드를 후속 노드로 설정
+		}
+		return current;
+	}
+	void deletevalue(int value) {
+		root = delete_impl(root, value);
+	}
+public:
+	node* delete_impl(node* start, int value) {
+		//노드가 없을 경우
+		if (!start) {
+			return NULL;
+		}
+		if (value < start->data) {
+			start->left = delete_impl(start->left, value);//삭제하고자 하는 원소가 현재 노드의 왼쪽 서브에 있는 경우
+		}
+		else if (value > start->data) {//삭제하고자 하는 원소가 현재 노드의 오른쪽 서브에 있는 경우
+			start->right = delete_impl(start->right, value);
+		}
+		else {//삭제하고자 하는 원소가 현재 노드의 현재 서브에 있는 경우
+
+			//자식 노드가 전혀 없거나, 왼쪽 자식 노드만 없는 경우
+			if (!start->left) {
+				auto tmp = start->right;
+				delete start;
+				return tmp;
+			}
+
+			//오른쪽 자식 노드만 없는 경우
+			if (!start->right) {
+				auto tmp = start->left;
+				delete start;
+				return tmp;
+			}
+			//자식 노드가 둘 다 있는 경우
+			auto succNode = successor(start);
+			start->data = succNode->data;
+
+			//오른쪽 서브 트리에서 후속(successor)를 찾아 삭제
+			start->right = delete_impl(start->right, succNode->data);
+		}
+		return start;
+	}
+};
+
+int main() {
+	bst tree;
+
+	ifstream fin;
+	fin.open("bst_input.txt");
+	ofstream fout;
+	fout.open("bst_output.txt");
+	if (!fin || !fout) {
+		cout << "파일 열기 오류"; return 0;
+	}
+
+	int a; fin >> a;// 총 반복 횟수 (3)
+
+	int i_count[100] = { 0 };
+	int s_count[100] = { 0 };
+	int d_count[100] = { 0 };
+	int s2_count[100] = { 0 };
+	for (int i = 0; i < a; i++) {
+		int b; fin >> b;// 삽입할 키의 개수 (10)
+		for (int i = 0; i < b; i++) {
+
+			fin >> i_count[i];// 삽입할 키 ( 9 2 10 3 1 6 8 4 5 7 )
+			tree.insert(i_count[i]);
+		}
+		int c; fin >> c; // 검색할 키 s1 의 개수 (2)
+
+
+		for (int i = 0; i < c; i++) {
+			fin >> s_count[i];// 검색할 s1개의 키들 ( 8 1 )
+			cout << "R";
+			tree.find(s_count[i]);
+		}
+		int d; fin >> d; // 삭제할 키의 개수 (5)
+
+
+		for (int i = 0; i < d; i++) {//삭제할 키
+			fin >> d_count[i];
+			tree.deletevalue(d_count[i]);
+		}
+
+		int e; fin >> e; // 검색할 키 s2의 개수 (5)
+
+
+		for (int i = 0; i < e; i++) {// 검색할 s2개의 키들 (7 10 9 4 5)
+			fin >> s2_count[i];
+			cout << "R";
+			tree.find(s2_count[i]);
+		}
+		for (int i = 0; i < 100; i++) {
+			tree.deletevalue(i_count[i]);
+			tree.deletevalue(s_count[i]);
+			tree.deletevalue(d_count[i]);
+			tree.deletevalue(s2_count[i]);
+		}
+	}
+
+
+	fin.close();
+	fout.close();
+
+}
